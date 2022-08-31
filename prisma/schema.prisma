@@ -1,11 +1,121 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model tb_banks {
+  id        String @id @default(uuid())
+  id_bankth String @db.VarChar(5)
+  name      String @db.VarChar(50)
+  number    String @db.VarChar(50)
+}
+
+model tb_banks_th {
+  id_bankth String @id @db.VarChar(5)
+  name      String @unique(map: "name") @db.VarChar(50)
+}
+
+model tb_cart {
+  id         String @id @default(uuid())
+  id_user    Int
+  id_product Int
+  qty        Int
+}
+
+model tb_category {
+  id      String        @id @default(uuid())
+  name    String        @unique(map: "name") @db.VarChar(50)
+  product tb_products[]
+}
+
+model tb_orders {
+  id         String           @id @default(uuid())
+  date       String           @db.VarChar(50)
+  tracking   String           @db.VarChar(50)
+  order_item tb_order_items[]
+  payment    tb_pay[]
+  status     tb_status[]
+  user       tb_users[]
+}
+
+model tb_order_items {
+  id        String        @id @default(uuid())
+  qty       Int
+  total     Int
+  ordersId  String?
+  tb_orders tb_orders?    @relation(fields: [ordersId], references: [id])
+  product   tb_products[]
+
+  @@index([ordersId], map: "tb_order_items_ordersId_fkey")
+}
+
+model tb_otp {
+  id        String   @id @default(uuid())
+  username  String   @db.VarChar(100)
+  otp       Int
+  timestamp DateTime @default(now()) @db.Timestamp(0)
+}
+
+model tb_pay {
+  id             String     @id @default(uuid())
+  id_order       String     @db.VarChar(50)
+  slip           String     @db.VarChar(100)
+  date           String     @db.VarChar(50)
+  member_id_bank String     @db.VarChar(50)
+  store_id_bank  String     @db.VarChar(50)
+  ordersId       String?
+  tb_orders      tb_orders? @relation(fields: [ordersId], references: [id])
+
+  @@index([ordersId], map: "tb_pay_ordersId_fkey")
+}
+
+model tb_products {
+  id             String          @id @default(uuid())
+  name           String          @db.VarChar(100)
+  price          Decimal         @db.Decimal(10, 0)
+  qty            Int
+  spec           String?         @db.Text
+  img            String?         @db.Text
+  order_itemsId  String?
+  categoryId     String?
+  tb_category    tb_category?    @relation(fields: [categoryId], references: [id])
+  tb_order_items tb_order_items? @relation(fields: [order_itemsId], references: [id])
+
+  @@index([categoryId], map: "tb_products_categoryId_fkey")
+  @@index([order_itemsId], map: "tb_products_order_itemsId_fkey")
+}
+
+model tb_status {
+  id        String     @id @default(uuid())
+  name      String     @unique(map: "name") @db.VarChar(50)
+  admin     String     @db.VarChar(50)
+  name_user String     @db.VarChar(50)
+  ordersId  String?
+  tb_orders tb_orders? @relation(fields: [ordersId], references: [id])
+
+  @@index([ordersId], map: "tb_status_ordersId_fkey")
+}
+
+model tb_users {
+  id         String     @id @default(uuid())
+  username   String     @unique(map: "username") @db.VarChar(50)
+  password   String     @db.VarChar(255)
+  fullname   String     @db.VarChar(50)
+  tel        String     @db.VarChar(10)
+  email      String     @db.VarChar(50)
+  address    String     @db.Text
+  role       String     @db.VarChar(20)
+  created_at DateTime   @default(now()) @db.Timestamp(0)
+  ordersId   String?
+  tb_orders  tb_orders? @relation(fields: [ordersId], references: [id])
+
+  @@index([ordersId], map: "tb_users_ordersId_fkey")
+}
+
+model tb_website {
+  id String @id @default(uuid())
 }
